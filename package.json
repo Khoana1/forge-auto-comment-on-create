@@ -1,0 +1,16 @@
+{
+  "name": "forge-auto-comment-on-create",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint src/**/*.js"
+  },
+  "dependencies": {
+    "@forge/api": "^7.2.0",
+    "@forge/kvs": "^1.6.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  }
+}

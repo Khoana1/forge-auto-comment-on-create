@@ -1,0 +1,26 @@
+modules:
+  trigger:
+    - key: issue-created-welcome-comment
+      function: welcomeComment
+      events:
+        - avi:jira:created:issue
+      filter:
+        ignoreSelf: true
+        expression: event.issue.fields.project.key == 'SCRUM'
+        onError: RECEIVE_AND_LOG
+  function:
+    - key: welcomeComment
+      handler: index.run
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:issue:jira
+    - write:comment:jira
+    - storage:app
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/55bc1724-a6d3-4c19-ab22-f6b9382ecedb
