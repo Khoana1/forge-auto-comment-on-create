@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: package-lock.json
 
@@ -31,3 +31,6 @@ jobs:
       # App không có UI Kit frontend — bước này chạy forge lint (validate manifest + bundle).
       - name: Build frontend
         run: npm run build
+        env:
+          # Tránh prompt analytics consent của Forge CLI trong CI (non-TTY).
+          FORGE_DISABLE_ANALYTICS: true

@@ -13,6 +13,8 @@ Project: `forge-auto-comment-on-create`
 
 > App này **không có UI Kit frontend**. Bước **Build frontend** chạy `forge lint` để validate manifest và bundle Forge.
 
+> Trong CI, set `FORGE_DISABLE_ANALYTICS=true` để Forge CLI không hỏi consent analytics (lỗi *Prompts can not be meaningfully rendered in non-TTY environments*).
+
 ## Chạy local
 
 ```bash
