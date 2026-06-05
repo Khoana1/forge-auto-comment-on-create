@@ -1,6 +1,7 @@
 import { TARGET_PROJECT_KEY } from '../config.js';
 import { log } from '../lib/logger.js';
 import { dedupKeyFor, processWelcomeComment } from '../lib/welcomeCommentService.js';
+import { parseQueryParam, validateDedupTestRequest } from '../lib/validation.js';
 import { kvs } from '@forge/kvs';
 
 const jsonResponse = (statusCode, body) => ({
@@ -9,11 +10,7 @@ const jsonResponse = (statusCode, body) => ({
   body: JSON.stringify(body),
 });
 
-const getQueryParam = (request, name) => {
-  const raw = request?.queryParameters?.[name];
-  if (Array.isArray(raw)) return raw[0];
-  return raw;
-};
+const getQueryParam = (request, name) => parseQueryParam(request, name);
 
 const buildEvent = (issueKey) => ({
   issue: {
@@ -36,29 +33,26 @@ const buildEvent = (issueKey) => ({
  * (issue chưa có dedup key; lần 1 fail + xóa key, gọi lại không có simulateCommentFail để retry)
  */
 export const run = async (request, context) => {
-  if (request.method !== 'POST') {
-    return jsonResponse(405, { error: 'Method Not Allowed' });
-  }
-
   const issueKey = getQueryParam(request, 'issueKey');
-  if (!issueKey) {
-    return jsonResponse(400, { error: 'Missing query param: issueKey' });
+  const requestCheck = validateDedupTestRequest(request.method, issueKey);
+  if (!requestCheck.valid) {
+    return jsonResponse(requestCheck.statusCode, { error: requestCheck.error });
   }
 
   const simulateCommentFail = getQueryParam(request, 'simulateCommentFail') === 'true';
   const resetDedup = getQueryParam(request, 'resetDedup') === 'true';
-  const event = buildEvent(issueKey);
+  const event = buildEvent(requestCheck.issueKey);
 
   if (resetDedup) {
-    await kvs.delete(dedupKeyFor(issueKey));
-    log('info', 'test-welcome-dedup: dedup key cleared for test', { issueKey });
+    await kvs.delete(dedupKeyFor(requestCheck.issueKey));
+    log('info', 'test-welcome-dedup: dedup key cleared for test', { issueKey: requestCheck.issueKey });
   }
 
   log('info', 'test-welcome-dedup started', {
-    issueKey,
+    issueKey: requestCheck.issueKey,
     simulateCommentFail,
     resetDedup,
-    dedupKey: dedupKeyFor(issueKey),
+    dedupKey: dedupKeyFor(requestCheck.issueKey),
   });
 
   const invoke = async (runLabel) => {
@@ -69,7 +63,7 @@ export const run = async (request, context) => {
       });
       return { ok: true, ...result };
     } catch (err) {
-      return { ok: false, status: 'error', error: err.message, issueKey };
+      return { ok: false, status: 'error', error: err.message, issueKey: requestCheck.issueKey };
     }
   };
 
@@ -82,10 +76,10 @@ export const run = async (request, context) => {
     run2.ok &&
     run2.status === 'dedup_skip';
 
-  const dedupKeyExists = Boolean(await kvs.get(dedupKeyFor(issueKey)));
+  const dedupKeyExists = Boolean(await kvs.get(dedupKeyFor(requestCheck.issueKey)));
 
   return jsonResponse(200, {
-    issueKey,
+    issueKey: requestCheck.issueKey,
     simulateCommentFail,
     run1,
     run2,

@@ -2,6 +2,7 @@ import api, { route } from '@forge/api';
 import { kvs } from '@forge/kvs';
 import { DEDUP_KEY_PREFIX, DEDUP_TTL, TARGET_PROJECT_KEY } from '../config.js';
 import { log } from './logger.js';
+import { validateIssueCreatedEvent } from './validation.js';
 import { buildWelcomeCommentAdf } from './welcomeCommentAdf.js';
 import { resolveReporterDisplayName } from './reporter.js';
 
@@ -40,22 +41,27 @@ const addWelcomeComment = async (issueKey, reporterDisplayName) => {
  * @returns {'comment_added'|'dedup_skip'|'skipped'} status
  */
 export const processWelcomeComment = async (event, context) => {
-  const issueKey = event?.issue?.key;
-  const projectKey = event?.issue?.fields?.project?.key;
+  const validation = validateIssueCreatedEvent(event, TARGET_PROJECT_KEY);
 
-  if (!issueKey) {
-    log('warn', 'Skipped: missing issueKey in event');
-    return { status: 'skipped', reason: 'missing_issue_key' };
-  }
-
-  if (projectKey !== TARGET_PROJECT_KEY) {
-    log('info', 'Skipped: project does not match target', {
-      issueKey,
-      projectKey,
+  if (!validation.valid) {
+    if (validation.reason === 'missing_issue_key') {
+      log('warn', 'Skipped: missing issueKey in event');
+      return { status: 'skipped', reason: 'missing_issue_key' };
+    }
+    log('info', 'Skipped: validation failed', {
+      reason: validation.reason,
+      issueKey: event?.issue?.key,
+      projectKey: event?.issue?.fields?.project?.key,
       targetProject: TARGET_PROJECT_KEY,
     });
-    return { status: 'skipped', reason: 'wrong_project', issueKey };
+    return {
+      status: 'skipped',
+      reason: validation.reason,
+      issueKey: event?.issue?.key,
+    };
   }
+
+  const { issueKey } = validation;
 
   const dedupKey = dedupKeyFor(issueKey);
   if (await kvs.get(dedupKey)) {
