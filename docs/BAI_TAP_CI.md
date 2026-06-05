@@ -9,11 +9,11 @@ Project: `forge-auto-comment-on-create`
 | Jest (≥5 tests) | `__tests__/validation.test.js` — **9 tests** |
 | ESLint | `.eslintrc.cjs`, `npm run lint` |
 | CI workflow | `.github/workflows/ci.yml` |
-| 4 bước CI | Install → Lint → Unit tests → Build (`forge lint`) |
+| 4 bước CI | Install → Lint → Unit tests → Build (`scripts/ci-forge-lint.js`) |
 
-> App này **không có UI Kit frontend**. Bước **Build frontend** chạy `forge lint` để validate manifest và bundle Forge.
+> App này **không có UI Kit frontend**. Bước **Build frontend** chạy Forge lint (validate `manifest.yml` + `src/`) qua `scripts/ci-forge-lint.js`.
 
-> Trong CI, set `FORGE_DISABLE_ANALYTICS=true` để Forge CLI không hỏi consent analytics (lỗi *Prompts can not be meaningfully rendered in non-TTY environments*).
+> `npm run build:forge-cli` gọi `forge lint` trực tiếp (cần login + analytics consent). CI dùng script riêng để không cần Atlassian credentials.
 
 ## Chạy local
 

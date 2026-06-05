@@ -28,9 +28,6 @@ jobs:
       - name: Unit tests
         run: npm run test
 
-      # App không có UI Kit frontend — bước này chạy forge lint (validate manifest + bundle).
+      # App không có UI Kit frontend — bước này chạy Forge lint (validate manifest + src).
       - name: Build frontend
         run: npm run build
-        env:
-          # Tránh prompt analytics consent của Forge CLI trong CI (non-TTY).
-          FORGE_DISABLE_ANALYTICS: true

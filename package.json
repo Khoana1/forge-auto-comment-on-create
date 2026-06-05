@@ -8,7 +8,8 @@
     "lint:fix": "eslint src/ --fix",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "build": "forge lint"
+    "build": "node scripts/ci-forge-lint.js",
+    "build:forge-cli": "forge lint"
   },
   "dependencies": {
     "@forge/api": "^7.2.0",
