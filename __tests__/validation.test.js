@@ -14,9 +14,10 @@ describe('validateIssueKey', () => {
   });
 
   test('accepts trimmed issue key', () => {
+    // DEMO: cố ý fail để verify PR bị block khi CI đỏ — revert sau khi demo xong.
     expect(validateIssueKey('  SCRUM-42  ')).toEqual({
-      valid: true,
-      issueKey: 'SCRUM-42',
+      valid: false,
+      reason: 'missing_issue_key',
     });
   });
 });
